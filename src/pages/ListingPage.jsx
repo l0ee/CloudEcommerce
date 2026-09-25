@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowRight, Check, ChevronRight, Heart, SlidersHorizontal } from 'lucide-react';
 import { categories as catalogCategories, products as catalogProducts } from '../data/mockData.js';
+import { getProductImage, getProductOldPrice, getProductPrice, getProductRating, getProductRatingCount } from '../components/productUtils.js';
 import './pages.css';
 
 const money = (amount) => new Intl.NumberFormat('en-US', {
@@ -10,8 +11,11 @@ const money = (amount) => new Intl.NumberFormat('en-US', {
 }).format(amount ?? 0);
 
 function ProductTile({ product, onOpen, onAdd, favorites, onFavorite }) {
-  const image = product.images?.[0];
   const isFavorite = favorites.includes(product.id);
+  const price = getProductPrice(product);
+  const oldPrice = getProductOldPrice(product);
+  const rating = getProductRating(product);
+  const count = getProductRatingCount(product);
 
   return (
     <article className="product-card">
@@ -20,13 +24,13 @@ function ProductTile({ product, onOpen, onAdd, favorites, onFavorite }) {
         <button className={`heart-button ${isFavorite ? 'hearted' : ''}`} aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'} aria-pressed={isFavorite} onClick={() => onFavorite(product.id)}>
           <Heart size={17} fill={isFavorite ? 'currentColor' : 'none'} />
         </button>
-        <img className={`product-image tint-${product.color}`} src={image?.src} alt={image?.alt || product.name} loading="lazy" />
+        <img className={`product-image tint-${product.color || 'black'}`} src={getProductImage(product)} alt={product.name} loading="lazy" />
         <div className="quick-add"><button onClick={() => onAdd(product)}>＋ Quick add</button></div>
       </div>
       <div className="product-info">
-        <div className="product-name-line"><button className="product-title" onClick={() => onOpen(product.slug)}>{product.name}</button><strong>{money(product.price.amount)}</strong></div>
-        <p className="product-description">{product.description}</p>
-        <div className="rating-line"><span className="rating" aria-label={`${product.rating.average} out of 5 stars`}><span>★★★★★</span><small>({product.rating.count})</small></span><del>{money(product.oldPrice.amount)}</del></div>
+        <div className="product-name-line"><button className="product-title" onClick={() => onOpen(product.slug || product.id)}>{product.name}</button><strong>{money(price)}</strong></div>
+        <p className="product-description">{product.description || product.desc}</p>
+        <div className="rating-line"><span className="rating" aria-label={`${rating} out of 5 stars`}><span>★★★★★</span><small>({count})</small></span>{oldPrice > price && <del>{money(oldPrice)}</del>}</div>
         <button className="outline-add" onClick={() => onAdd(product)}>Add to Cart</button>
       </div>
     </article>
@@ -96,21 +100,23 @@ export default function ListingPage({
 
   const filteredProducts = useMemo(() => {
     let result = productList.filter((product) => {
-      if (searchQuery && !`${product.name} ${product.description}`.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-      if (selectedCategory && product.categoryId !== selectedCategory) return false;
-      const price = product.price.amount;
+      if (searchQuery && !`${product.name} ${product.description || product.desc || ''}`.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (selectedCategory && product.categoryId !== selectedCategory && product.category?.toLowerCase() !== selectedCategory.toLowerCase()) return false;
+      const price = getProductPrice(product);
+      const oldPrice = getProductOldPrice(product);
+      const rating = getProductRating(product);
       if (priceRange === 'under-100' && price >= 100) return false;
       if (priceRange === '100-300' && (price < 100 || price > 300)) return false;
       if (priceRange === 'over-300' && price <= 300) return false;
-      if (color && !product.colors.includes(color)) return false;
-      if (minimumRating && product.rating.average < Number(minimumRating)) return false;
-      if (saleOnly && product.oldPrice.amount <= price) return false;
+      if (color && !(product.colors || []).includes(color)) return false;
+      if (minimumRating && rating < Number(minimumRating)) return false;
+      if (saleOnly && oldPrice <= price) return false;
       return true;
     });
 
-    if (sort === 'price-ascending') result = result.sort((a, b) => a.price.amount - b.price.amount);
-    if (sort === 'price-descending') result = result.sort((a, b) => b.price.amount - a.price.amount);
-    if (sort === 'rating') result = result.sort((a, b) => b.rating.average - a.rating.average || b.rating.count - a.rating.count);
+    if (sort === 'price-ascending') result = result.sort((a, b) => getProductPrice(a) - getProductPrice(b));
+    if (sort === 'price-descending') result = result.sort((a, b) => getProductPrice(b) - getProductPrice(a));
+    if (sort === 'rating') result = result.sort((a, b) => getProductRating(b) - getProductRating(a) || getProductRatingCount(b) - getProductRatingCount(a));
     return result;
   }, [productList, searchQuery, selectedCategory, priceRange, color, minimumRating, saleOnly, sort]);
 

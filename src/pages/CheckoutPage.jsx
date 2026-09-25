@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowRight, Check, CheckCircle2, ChevronRight, CreditCard, Minus, Plus, RotateCcw, ShieldCheck, ShoppingCart, Truck } from 'lucide-react';
+import { getProductImage, getProductPrice } from '../components/productUtils.js';
 import './pages.css';
 
 const requiredFields = {
@@ -34,7 +35,7 @@ export function applyCoupon(code, subtotal) {
 
 export function calculateOrderSummary(items = [], couponApplied = false) {
   const subtotal = roundMoney(items.reduce((sum, item) => {
-    const price = Number(item.product?.price?.amount) || 0;
+    const price = getProductPrice(item.product);
     const quantity = Math.max(0, Number(item.qty) || 0);
     return sum + price * quantity;
   }, 0));
@@ -122,10 +123,10 @@ export default function CheckoutPage({
             <div className="checkout-card-head"><div><span className="step-number">01</span><h2>Review your items</h2></div><button type="button" onClick={() => onNavigate('listing', '')}>Continue shopping <ArrowRight size={14} /></button></div>
             {items.length ? items.map(({ product, qty }) => (
               <div className="review-item" key={product.id}>
-                <img src={product.images?.[0]?.src} alt={product.images?.[0]?.alt || product.name} />
-                <div className="review-product"><button type="button" onClick={() => onNavigate('product', product.slug)}>{product.name}</button><small>Color: {product.color} · {product.stock?.status || 'In stock'}</small></div>
+                <img src={getProductImage(product)} alt={product.name} />
+                <div className="review-product"><button type="button" onClick={() => onNavigate('product', product.slug || product.id)}>{product.name}</button><small>Color: {product.color || 'Standard'} · {product.stock?.status || 'In stock'}</small></div>
                 <div className="review-quantity"><button type="button" aria-label={`Decrease ${product.name} quantity`} onClick={() => onChangeQty(product.id, qty - 1)}><Minus size={12} /></button><span>{qty}</span><button type="button" aria-label={`Increase ${product.name} quantity`} onClick={() => onChangeQty(product.id, qty + 1)}><Plus size={12} /></button></div>
-                <b className="review-total">{money(product.price.amount * qty)}</b>
+                <b className="review-total">{money(getProductPrice(product) * qty)}</b>
               </div>
             )) : <div className="empty-cart"><ShoppingCart size={22} /><p>Your cart is empty.</p><button type="button" onClick={() => onNavigate('listing', '')}>Find something you’ll love</button></div>}
           </section>
@@ -166,7 +167,7 @@ export default function CheckoutPage({
         <aside className="order-summary">
           <div className="summary-header"><h2>Order summary</h2><span>{itemCount} items</span></div>
           <div className="coupon-form"><label htmlFor="coupon">Promo code</label><div><input id="coupon" placeholder="Enter coupon code" value={coupon} onChange={(event) => { setCoupon(event.target.value); setCouponApplied(false); setCouponMessage(''); }} /><button type="button" onClick={handleCoupon}>{couponApplied ? 'Applied' : 'Apply'}</button></div>{couponMessage && <small className={couponApplied ? 'coupon-success' : 'coupon-error'} role="status">{couponApplied && <CheckCircle2 size={13} />}{couponMessage}</small>}</div>
-          <div className="summary-items">{items.map(({ product, qty }) => <div key={product.id}><span>{product.name} <small>× {qty}</small></span><b>{money(product.price.amount * qty)}</b></div>)}</div>
+          <div className="summary-items">{items.map(({ product, qty }) => <div key={product.id}><span>{product.name} <small>× {qty}</small></span><b>{money(getProductPrice(product) * qty)}</b></div>)}</div>
           <div className="summary-row"><span>Subtotal</span><b>{money(subtotal)}</b></div>
           <div className="summary-row"><span>Delivery</span><b className={delivery === 0 ? 'free-shipping' : ''}>{delivery === 0 ? 'Free' : money(delivery)}</b></div>
           {discount > 0 && <div className="summary-row discount-row"><span>Discount</span><b>-{money(discount)}</b></div>}

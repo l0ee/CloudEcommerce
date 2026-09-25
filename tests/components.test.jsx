@@ -291,7 +291,7 @@ describe('CartDrawer', () => {
   };
 
   it('calculates line totals and shipping progress toward $50', () => {
-    const CartDrawer = componentModules['../src/components/CartDrawer.jsx']?.CartDrawer;
+    const CartDrawer = componentModules['../src/components/CartDrawer.jsx']?.CartDrawer || componentModules['../src/components/CartDrawer.jsx']?.default || componentModules['../src/components/CartDrawer.js']?.CartDrawer || componentModules['../src/components/CartDrawer.js']?.default;
     expect(CartDrawer).toBeTypeOf('function');
     const container = render(
       <CartDrawer items={[{ product, qty: 2 }]} onClose={vi.fn()} onNavigate={vi.fn()} onChangeQty={vi.fn()} onRemove={vi.fn()} />,
@@ -304,7 +304,7 @@ describe('CartDrawer', () => {
   });
 
   it('supports quantity updates, removal, and checkout navigation', () => {
-    const CartDrawer = componentModules['../src/components/CartDrawer.jsx']?.CartDrawer;
+    const CartDrawer = componentModules['../src/components/CartDrawer.jsx']?.CartDrawer || componentModules['../src/components/CartDrawer.jsx']?.default || componentModules['../src/components/CartDrawer.js']?.CartDrawer || componentModules['../src/components/CartDrawer.js']?.default;
     expect(CartDrawer).toBeTypeOf('function');
     const onChangeQty = vi.fn();
     const onRemove = vi.fn();
@@ -323,7 +323,7 @@ describe('CartDrawer', () => {
   });
 
   it('announces free shipping at $50 and shows a browse action when empty', () => {
-    const CartDrawer = componentModules['../src/components/CartDrawer.jsx']?.CartDrawer;
+    const CartDrawer = componentModules['../src/components/CartDrawer.jsx']?.CartDrawer || componentModules['../src/components/CartDrawer.jsx']?.default || componentModules['../src/components/CartDrawer.js']?.CartDrawer || componentModules['../src/components/CartDrawer.js']?.default;
     expect(CartDrawer).toBeTypeOf('function');
     const freeShippingProduct = { ...product, price: 50 };
     const freeShipping = render(
@@ -338,13 +338,57 @@ describe('CartDrawer', () => {
   });
 
   it('closes through its close button, backdrop, or Escape key', () => {
-    const CartDrawer = componentModules['../src/components/CartDrawer.jsx']?.CartDrawer;
+    const CartDrawer = componentModules['../src/components/CartDrawer.jsx']?.CartDrawer || componentModules['../src/components/CartDrawer.jsx']?.default || componentModules['../src/components/CartDrawer.js']?.CartDrawer || componentModules['../src/components/CartDrawer.js']?.default;
     expect(CartDrawer).toBeTypeOf('function');
     const onClose = vi.fn();
     const container = render(<CartDrawer items={[]} onClose={onClose} onNavigate={vi.fn()} onChangeQty={vi.fn()} onRemove={vi.fn()} />);
     act(() => container.querySelector('[aria-label="Close cart"]').click());
     expect(onClose).toHaveBeenCalledOnce();
     act(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
+    expect(onClose).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('AccountModal', () => {
+  it('provides a labeled sign-in dialog and closes on Escape or backdrop', () => {
+    const AccountModal = componentModules['../src/components/AccountModal.jsx']?.AccountModal;
+    expect(AccountModal).toBeTypeOf('function');
+    const onClose = vi.fn();
+    const container = render(<AccountModal onClose={onClose} />);
+    const dialog = container.querySelector('[role="dialog"]');
+    expect(dialog?.getAttribute('aria-modal')).toBe('true');
+    expect(container.querySelector(`#${dialog.getAttribute('aria-labelledby')}`)?.textContent).toBe('Good to see you.');
+    expect(container.querySelector('input[type="email"]')).not.toBeNull();
+    act(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
+    expect(onClose).toHaveBeenCalledOnce();
+    act(() => container.querySelector('.modal-layer').dispatchEvent(new MouseEvent('mousedown', { bubbles: true })));
+    expect(onClose).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('OrderModal', () => {
+  it('provides a labeled confirmation dialog with close and continue actions', () => {
+    const OrderModal = componentModules['../src/components/OrderModal.jsx']?.OrderModal;
+    expect(OrderModal).toBeTypeOf('function');
+    const onClose = vi.fn();
+    const onContinue = vi.fn();
+    const container = render(<OrderModal onClose={onClose} onContinue={onContinue} />);
+    const dialog = container.querySelector('[role="dialog"]');
+    expect(dialog?.getAttribute('aria-modal')).toBe('true');
+    expect(container.querySelector(`#${dialog.getAttribute('aria-labelledby')}`)?.textContent).toContain('Your order has');
+    act(() => container.querySelector('[aria-label="Close order confirmation"]').click());
+    act(() => container.querySelector('.button-orange').click());
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(onContinue).toHaveBeenCalledOnce();
+  });
+
+  it('closes from Escape and backdrop interactions', () => {
+    const OrderModal = componentModules['../src/components/OrderModal.jsx']?.OrderModal;
+    expect(OrderModal).toBeTypeOf('function');
+    const onClose = vi.fn();
+    const container = render(<OrderModal onClose={onClose} onContinue={vi.fn()} />);
+    act(() => document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })));
+    act(() => container.querySelector('.modal-layer').dispatchEvent(new MouseEvent('mousedown', { bubbles: true })));
     expect(onClose).toHaveBeenCalledTimes(2);
   });
 });

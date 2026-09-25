@@ -3,6 +3,7 @@ import {
   ArrowRight, Check, Heart, PackageCheck, RotateCcw, ShieldCheck, Truck,
 } from 'lucide-react';
 import { brands, categories, heroPromotions, products as catalogProducts } from '../data/mockData.js';
+import { getProductImage, getProductOldPrice, getProductPrice, getProductRating, getProductRatingCount } from '../components/productUtils.js';
 import './pages.css';
 
 const money = (amount) => new Intl.NumberFormat('en-US', {
@@ -12,8 +13,11 @@ const money = (amount) => new Intl.NumberFormat('en-US', {
 }).format(amount ?? 0);
 
 function ProductTile({ product, onOpen, onAdd, favorites, onFavorite }) {
-  const image = product.images?.[0];
   const isFavorite = favorites.includes(product.id);
+  const price = getProductPrice(product);
+  const oldPrice = getProductOldPrice(product);
+  const rating = getProductRating(product);
+  const count = getProductRatingCount(product);
 
   return (
     <article className="product-card">
@@ -27,22 +31,22 @@ function ProductTile({ product, onOpen, onAdd, favorites, onFavorite }) {
         >
           <Heart size={17} fill={isFavorite ? 'currentColor' : 'none'} />
         </button>
-        <img className={`product-image tint-${product.color}`} src={image?.src} alt={image?.alt || product.name} loading="lazy" />
+        <img className={`product-image tint-${product.color || 'black'}`} src={getProductImage(product)} alt={product.name} loading="lazy" />
         <div className="quick-add">
           <button onClick={() => onAdd(product)}><span aria-hidden="true">＋</span> Quick add</button>
         </div>
       </div>
       <div className="product-info">
         <div className="product-name-line">
-          <button className="product-title" onClick={() => onOpen(product.slug)}>{product.name}</button>
-          <strong>{money(product.price.amount)}</strong>
+          <button className="product-title" onClick={() => onOpen(product.slug || product.id)}>{product.name}</button>
+          <strong>{money(price)}</strong>
         </div>
-        <p className="product-description">{product.description}</p>
+        <p className="product-description">{product.description || product.desc}</p>
         <div className="rating-line">
-          <span className="rating" aria-label={`${product.rating.average} out of 5 stars`}>
-            <span>★★★★★</span><small>({product.rating.count})</small>
+          <span className="rating" aria-label={`${rating} out of 5 stars`}>
+            <span>★★★★★</span><small>({count})</small>
           </span>
-          <del>{money(product.oldPrice.amount)}</del>
+          {oldPrice > price && <del>{money(oldPrice)}</del>}
         </div>
         <button className="outline-add" onClick={() => onAdd(product)}>Add to Cart</button>
       </div>
@@ -95,7 +99,7 @@ export default function HomePage({
   onFavorite = () => {},
 }) {
   const popularProducts = [...productList]
-    .sort((a, b) => b.rating.average - a.rating.average || b.rating.count - a.rating.count)
+    .sort((a, b) => getProductRating(b) - getProductRating(a) || getProductRatingCount(b) - getProductRatingCount(a))
     .slice(0, 4);
 
   return (
