@@ -124,11 +124,11 @@ git commit -m "chore: setup vitest testing environment and mock catalog data"
 - Create: `src/components/AccountModal.jsx`
 - Create: `src/components/OrderModal.jsx`
 
-- [ ] **Step 1: Extract reusable UI elements into separate files**
-- [ ] **Step 2: Enhance Header search bar with suggestion popover, keyboard clearing, accessibility labels (`aria-expanded`, `aria-label`)**
-- [ ] **Step 3: Refine ProductCard layout (price, discount badge, star rating, color swatches, quick add, heart button, accessible tap target)**
-- [ ] **Step 4: Refine CartDrawer layout with line totals, quantity controls, remove buttons, subtotal, free shipping progress indicator**
-- [ ] **Step 5: Commit**
+- [x] **Step 1: Extract reusable UI elements into separate files**
+- [x] **Step 2: Enhance Header search bar with suggestion popover, keyboard clearing, accessibility labels (`aria-expanded`, `aria-label`)**
+- [x] **Step 3: Refine ProductCard layout (price, discount badge, star rating, color swatches, quick add, heart button, accessible tap target)**
+- [x] **Step 4: Refine CartDrawer layout with line totals, quantity controls, remove buttons, subtotal, free shipping progress indicator**
+- [x] **Step 5: Commit**
 
 ---
 

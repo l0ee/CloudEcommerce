@@ -76,7 +76,7 @@ export function CartDrawer({
                 >
                   <span className="shipping-progress-fill" style={{ width: `${progress}%` }} />
                 </div>
-                <small>Free shipping on orders over $50</small>
+                <small>Free shipping on orders of $50 or more</small>
               </div>
               <div className="drawer-subtotal"><span>Subtotal</span><b>{formatMoney(subtotal)}</b></div>
               <p>Shipping and taxes calculated at checkout.</p>

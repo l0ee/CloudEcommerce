@@ -216,6 +216,23 @@ describe('Header', () => {
     expect(onNavigate).toHaveBeenCalledWith('listing', 'Furniture');
     expect(mobileMenu.getAttribute('aria-expanded')).toBe('false');
   });
+
+  it('uses normalized catalog defaults and the route category when props are omitted', () => {
+    const Header = componentModules['../src/components/Header.jsx']?.Header;
+    expect(Header).toBeTypeOf('function');
+    const previousHash = window.location.hash;
+    window.location.hash = '#listing/Furniture';
+    const container = render(<Header query="Wireless" setQuery={vi.fn()} onNavigate={vi.fn()} onCart={vi.fn()} onAccount={vi.fn()} />);
+    const input = container.querySelector('[role="combobox"]');
+    act(() => input.focus());
+    const suggestion = container.querySelector('[role="option"]');
+    expect(suggestion).not.toBeNull();
+    expect(suggestion.textContent).toContain('Wireless Earbuds');
+    act(() => [...container.querySelectorAll('button')].find((button) => button.textContent.includes('Categories')).click());
+    const furnitureCategory = container.querySelector('.category-menu [data-category-target="Furniture"]');
+    expect(furnitureCategory?.getAttribute('aria-current')).toBe('page');
+    window.location.hash = previousHash;
+  });
 });
 
 describe('ProductCard', () => {
@@ -301,6 +318,7 @@ describe('CartDrawer', () => {
     expect(container.querySelector('[role="progressbar"]')?.getAttribute('aria-valuenow')).toBe('40');
     expect(container.querySelector('.shipping-progress-fill')?.style.width).toBe('80%');
     expect(container.querySelector('.shipping-message')?.textContent).toContain('$10.00 away');
+    expect(container.querySelector('.shipping-tracker > small')?.textContent).toBe('Free shipping on orders of $50 or more');
   });
 
   it('supports quantity updates, removal, and checkout navigation', () => {

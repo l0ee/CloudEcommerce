@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { formatMoney, getProductImage, getProductName, getProductPrice } from './productUtils.js';
 import { Logo } from './Logo.jsx';
+import { categories as catalogCategories, products as catalogProducts } from '../data/mockData.js';
 
 const departmentItems = [
   { label: 'Electronics', target: 'Electronics' },
@@ -27,6 +28,12 @@ function getCategoryLabel(category) {
   return category?.title ?? category?.name ?? '';
 }
 
+function getRouteCategory() {
+  if (typeof window === 'undefined') return '';
+  const match = window.location.hash.match(/^#\/?(?:listing|category)\/(.+)$/i);
+  return match ? decodeURIComponent(match[1]) : '';
+}
+
 export function Header({
   onNavigate = () => {},
   cartCount = 0,
@@ -34,8 +41,8 @@ export function Header({
   query = '',
   setQuery = () => {},
   onAccount = () => {},
-  products = [],
-  categories = [],
+  products = catalogProducts,
+  categories = catalogCategories,
   activeCategory = '',
 }) {
   const [categoryOpen, setCategoryOpen] = useState(false);
@@ -43,6 +50,11 @@ export function Header({
   const [searchOpen, setSearchOpen] = useState(false);
   const [activeSuggestion, setActiveSuggestion] = useState(-1);
   const searchInputRef = useRef(null);
+  const currentCategory = activeCategory || getRouteCategory();
+  const isActiveCategory = (target) => (
+    String(currentCategory).toLowerCase().replace(/[^a-z0-9]/g, '')
+    === String(target).toLowerCase().replace(/[^a-z0-9]/g, '')
+  );
   const suggestions = products
     .filter((product) => getProductName(product).toLowerCase().includes(query.trim().toLowerCase()))
     .slice(0, 4);
@@ -160,7 +172,7 @@ export function Header({
                       key={`${label}-${target}`}
                       type="button"
                       data-category-target={target}
-                      aria-current={activeCategory === target ? 'page' : undefined}
+                      aria-current={isActiveCategory(target) ? 'page' : undefined}
                       onClick={() => navigateToCategory(target)}
                     >
                       {label}<ChevronRight size={14} aria-hidden="true" />
@@ -242,7 +254,7 @@ export function Header({
                   key={`${label}-${target}`}
                   type="button"
                   data-category-target={target}
-                  aria-current={activeCategory === target ? 'page' : undefined}
+                  aria-current={isActiveCategory(target) ? 'page' : undefined}
                   onClick={() => navigateToCategory(target)}
                 >
                   {label}<ChevronRight size={15} aria-hidden="true" />
