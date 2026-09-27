@@ -128,13 +128,13 @@ export function Header({
     <header className="site-header">
       <div className="topline">
         <div className="topline-inner">
-          <a className="phone-line" href="tel:+001234567890"><Phone size={12} aria-hidden="true" /> +001234567890</a>
+          <a className="phone-line" href="tel:+001234567890"><Phone size={12} aria-hidden="true" /> <span>Need help?</span> +001234567890</a>
           <button className="top-promo" type="button" onClick={() => navigateToCategory(liveCategories ? '' : 'Headphones')}>
-            Get 50% Off on Selected Items <span>|</span> <u>Shop Now</u>
+            Get 50% Off on your first order • Promo code 1234
           </button>
           <div className="top-selects">
             <button type="button">Eng <ChevronDown size={12} aria-hidden="true" /></button>
-            <button type="button"><MapPin size={12} aria-hidden="true" /> Location <ChevronDown size={12} aria-hidden="true" /></button>
+            <button type="button"><MapPin size={12} aria-hidden="true" /> Cambodia <ChevronDown size={12} aria-hidden="true" /></button>
           </div>
         </div>
       </div>

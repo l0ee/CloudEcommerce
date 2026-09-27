@@ -173,7 +173,7 @@ export function App() {
 
   return (
     <div className="app-shell">
-      <div className="seller-banner"><div className="container"><span><Tag size={14} /> Sell your items on FECS329 Store</span><button type="button" onClick={() => { if (user) setSellModalOpen(true); else setAccountOpen(true); }}>{user ? 'Sell Product' : 'Sign in to sell'}</button></div></div>
+      <div className="seller-banner"><div className="container"><span><Tag size={14} /> Sell your items on CYBERSHOP</span><button type="button" onClick={() => { if (user) setSellModalOpen(true); else setAccountOpen(true); }}>{user ? 'Sell Product' : 'Sign in to sell'}</button></div></div>
 
       <Header
         onNavigate={navigate}

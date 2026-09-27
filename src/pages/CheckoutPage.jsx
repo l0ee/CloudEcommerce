@@ -29,17 +29,23 @@ export function validateCheckoutForm(values = {}) {
 }
 
 export function applyCoupon(code, subtotal) {
-  if (!String(code ?? '').trim()) return { applied: false, discount: 0 };
-  return { applied: true, discount: roundMoney(Math.max(0, Number(subtotal) || 0) * 0.1) };
+  const normalized = String(code ?? '').trim();
+  if (!normalized) return { applied: false, discount: 0, percent: 0 };
+  const amount = Math.max(0, Number(subtotal) || 0);
+  // '1234' gives 50% off
+  if (normalized === '1234') return { applied: true, discount: roundMoney(amount * 0.5), percent: 50 };
+  // any other non-empty code gives 10% off
+  return { applied: true, discount: roundMoney(amount * 0.1), percent: 10 };
 }
 
-export function calculateOrderSummary(items = [], couponApplied = false) {
+export function calculateOrderSummary(items = [], couponCode = '') {
   const subtotal = roundMoney(items.reduce((sum, item) => {
     const price = getProductPrice(item.product);
     const quantity = Math.max(0, Number(item.qty) || 0);
     return sum + price * quantity;
   }, 0));
-  const discount = couponApplied ? applyCoupon('applied', subtotal).discount : 0;
+  const coupon = String(couponCode ?? '').trim();
+  const discount = coupon ? applyCoupon(coupon, subtotal).discount : 0;
   const delivery = subtotal === 0 || subtotal > 50 ? 0 : 5.9;
   return { subtotal, discount, delivery, total: roundMoney(subtotal - discount + delivery) };
 }
@@ -50,6 +56,17 @@ const money = (amount) => new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 2,
 }).format(amount ?? 0);
 
+const stateOptionsByCountry = {
+  Cambodia: ['Phnom Penh', 'Siem Reap', 'Battambang', 'Kampong Cham', 'Sihanoukville'],
+  'United States': ['California', 'New York', 'Texas', 'Florida', 'Illinois'],
+  Canada: ['Ontario', 'Quebec', 'British Columbia', 'Alberta', 'Manitoba'],
+  'United Kingdom': ['London', 'Manchester', 'Birmingham', 'Glasgow', 'Edinburgh'],
+};
+
+export function getStateOptionsForCountry(country = 'Cambodia') {
+  return stateOptionsByCountry[country] || stateOptionsByCountry.Cambodia;
+}
+
 const initialValues = {
   firstName: '',
   lastName: '',
@@ -58,6 +75,7 @@ const initialValues = {
   city: '',
   postalCode: '',
   state: '',
+  country: 'Cambodia',
 };
 
 function CheckoutField({ name, label, value, error, onChange, type = 'text', className = '', children }) {
@@ -84,12 +102,19 @@ export default function CheckoutPage({
   const [couponMessage, setCouponMessage] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [orderMessage, setOrderMessage] = useState('');
-  const { subtotal, discount, delivery, total } = calculateOrderSummary(items, couponApplied);
+  const { subtotal, discount, delivery, total } = calculateOrderSummary(items, coupon);
   const itemCount = items.reduce((sum, item) => sum + (Number(item.qty) || 0), 0);
+  const stateOptions = getStateOptionsForCountry(values.country || 'Cambodia');
 
   const updateField = (event) => {
     const { name, value } = event.target;
-    setValues((current) => ({ ...current, [name]: value }));
+    setValues((current) => {
+      const next = { ...current, [name]: value };
+      if (name === 'country' && value !== current.country) {
+        next.state = '';
+      }
+      return next;
+    });
     if (errors[name]) setErrors((current) => ({ ...current, [name]: '' }));
     setOrderMessage('');
   };
@@ -97,7 +122,13 @@ export default function CheckoutPage({
   const handleCoupon = () => {
     const result = applyCoupon(coupon, subtotal);
     setCouponApplied(result.applied);
-    setCouponMessage(result.applied ? '10% discount applied.' : 'Enter a promo code first.');
+    if (!coupon.trim()) {
+      setCouponMessage('Enter a promo code first.');
+    } else if (result.applied) {
+      setCouponMessage(`${result.percent}% discount applied.`);
+    } else {
+      setCouponMessage('Promo code not valid.');
+    }
   };
 
   const placeOrder = (event) => {
@@ -144,10 +175,10 @@ export default function CheckoutPage({
               <CheckoutField name="state" label="State / province" value={values.state} error={errors.state} onChange={updateField}>
                 <select id="state" name="state" value={values.state} onChange={updateField} aria-invalid={Boolean(errors.state)} aria-describedby={errors.state ? 'state-error' : undefined}>
                   <option value="">Select state or province</option>
-                  {['California', 'New York', 'Texas', 'Florida', 'Illinois', 'Ontario', 'Quebec', 'British Columbia'].map((state) => <option key={state} value={state}>{state}</option>)}
+                  {stateOptions.map((state) => <option key={state} value={state}>{state}</option>)}
                 </select>
               </CheckoutField>
-              <label className="checkout-field"><span>Country</span><select defaultValue="United States"><option>United States</option><option>Canada</option><option>United Kingdom</option></select></label>
+              <label className="checkout-field"><span>Country</span><select name="country" value={values.country || 'Cambodia'} onChange={updateField}><option>Cambodia</option><option>United States</option><option>Canada</option><option>United Kingdom</option></select></label>
               <label className="checkout-field full-field"><span>Delivery notes <small className="optional">Optional</small></span><textarea placeholder="Anything we should know about delivery?" rows="3" /></label>
             </div>
             <label className="checkbox-line"><input type="checkbox" defaultChecked /><span /> Save this address for next time</label>

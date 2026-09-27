@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyCoupon, calculateOrderSummary, validateCheckoutForm } from '../src/pages/CheckoutPage.jsx';
+import { applyCoupon, calculateOrderSummary, getStateOptionsForCountry, validateCheckoutForm } from '../src/pages/CheckoutPage.jsx';
 
 const completeForm = {
   firstName: 'Alex',
@@ -32,21 +32,36 @@ describe('checkout form validation', () => {
   });
 });
 
+describe('checkout location options', () => {
+  it('uses Cambodia provinces by default and switches with the selected country', () => {
+    expect(getStateOptionsForCountry('Cambodia')).toContain('Phnom Penh');
+    expect(getStateOptionsForCountry('United States')).toContain('California');
+    expect(getStateOptionsForCountry('Canada')).toContain('Ontario');
+  });
+});
+
 describe('checkout promo coupon', () => {
   it('applies a ten percent discount for a nonblank coupon', () => {
-    expect(applyCoupon(' SAVE10 ', 100)).toEqual({ applied: true, discount: 10 });
+    expect(applyCoupon(' SAVE10 ', 100)).toEqual({ applied: true, discount: 10, percent: 10 });
   });
 
   it('does not apply a coupon when its code is blank', () => {
-    expect(applyCoupon('   ', 100)).toEqual({ applied: false, discount: 0 });
+    expect(applyCoupon('   ', 100)).toEqual({ applied: false, discount: 0, percent: 0 });
   });
 
   it('calculates subtotal, discount, delivery, and total', () => {
     expect(calculateOrderSummary([
       { product: { price: { amount: 50 } }, qty: 2 },
-    ], true)).toEqual({ subtotal: 100, discount: 10, delivery: 0, total: 90 });
+    ], 'SAVE10')).toEqual({ subtotal: 100, discount: 10, delivery: 0, total: 90 });
     expect(calculateOrderSummary([
       { product: { price: { amount: 20 } }, qty: 1 },
     ])).toEqual({ subtotal: 20, discount: 0, delivery: 5.9, total: 25.9 });
+  });
+
+  it('applies 50% discount for code 1234', () => {
+    expect(applyCoupon('1234', 200)).toEqual({ applied: true, discount: 100, percent: 50 });
+    expect(calculateOrderSummary([
+      { product: { price: { amount: 100 } }, qty: 2 },
+    ], '1234')).toEqual({ subtotal: 200, discount: 100, delivery: 0, total: 100 });
   });
 });

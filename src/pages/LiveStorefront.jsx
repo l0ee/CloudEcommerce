@@ -23,7 +23,7 @@ export default function LiveStorefront({ page = 'home', products = [], categorie
 
   const visible = filterCatalog(products, { query, category: page === 'listing' ? category : '' });
   return <main className="container live-store">
-    <div className="live-heading"><span className="eyebrow">FECS329 Store · Strapi catalogue</span><h1>{page === 'home' ? 'Discover something new' : query ? `Results for “${query}”` : category ? `Shop ${category}` : 'All products'}</h1><p>Explore products listed by our community.</p></div>
+    <div className="live-heading"><span className="eyebrow">CYBERSHOP · Strapi catalogue</span><h1>{page === 'home' ? 'Discover something new' : query ? `Results for “${query}”` : category ? `Shop ${category}` : 'All products'}</h1><p>Explore products listed by our community.</p></div>
     <div className="live-categories"><button className={!category ? 'active' : ''} onClick={() => onNavigate('listing', '')}>All products</button>{categories.map((cat) => <button key={cat.id} className={category === cat.slug || category === cat.name ? 'active' : ''} onClick={() => onNavigate('listing', cat.slug || cat.name)}>{cat.name}</button>)}</div>
     {visible.length ? <div className="product-grid">{visible.map((item) => <article className="product-card" key={item.id}>
       <button className="product-picture live-picture" aria-label={`View ${item.name}`} onClick={() => onNavigate('product', item.documentId)}><img className="product-image" src={item.image} alt={item.name} /></button>
