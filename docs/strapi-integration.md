@@ -1,4 +1,6 @@
-# Shopcart Strapi CMS Integration Guide
+# Shopcart Strapi CMS Integration Guide (historical proposal)
+
+For the current demo and role permissions, see `README.md`. This is an older proposal: never put an admin/API token into `VITE_` variables because it is exposed to every browser visitor. The current account flow uses a per-user Strapi JWT instead.
 
 This guide details how to connect the Shopcart storefront to a Strapi v4 / v5 headless CMS backend.
 
@@ -12,15 +14,13 @@ Store all API configuration in environment variables (`.env.local` or deployment
 # Strapi API Endpoint
 VITE_STRAPI_API_URL=https://api.shopcart.example.com
 
-# Strapi Public / API Token (Bearer Token)
-VITE_STRAPI_TOKEN=your_strapi_api_token_here
+# Authentication uses a per-user Strapi JWT returned by /api/auth/local.
 ```
 
 In `src/services/apiConfig.js`, these values are referenced dynamically:
 ```js
 export const API_CONFIG = {
   baseUrl: import.meta.env.VITE_STRAPI_API_URL || '',
-  token: import.meta.env.VITE_STRAPI_TOKEN || '',
   useMock: !import.meta.env.VITE_STRAPI_API_URL,
 };
 ```

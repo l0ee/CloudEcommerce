@@ -14,6 +14,8 @@ import {
   getProductRatingCount,
 } from './productUtils.js';
 
+import { formatStrapiImageUrl } from '../utils/strapi.js';
+
 export function ProductCard({
   product,
   onOpen = () => {},
@@ -22,11 +24,13 @@ export function ProductCard({
   onFavorite = () => {},
   compact = false,
 }) {
-  const name = getProductName(product);
-  const image = getProductImage(product);
-  const price = getProductPrice(product);
+  const productId = product.documentId || product.id;
+  const name = getProductName(product) || product.title;
+  const image = formatStrapiImageUrl(product.imageUrl || getProductImage(product));
+  const price = getProductPrice(product) || product.price || 0;
   const oldPrice = getProductOldPrice(product);
   const colors = getProductColors(product);
+  const stock = product.stock ?? 10;
   const [imageFailed, setImageFailed] = useState(false);
 
   useEffect(() => setImageFailed(false), [image]);
@@ -36,7 +40,7 @@ export function ProductCard({
       <div className="product-picture">
         {product.tag && <span className="product-tag">{product.tag}</span>}
         {getDiscountPercent(product) > 0 && <span className="product-discount">{getDiscountPercent(product)}% OFF</span>}
-        <button className="product-open-target" type="button" aria-label={`View ${name}`} onClick={() => onOpen(product.id)}>
+        <button className="product-open-target" type="button" aria-label={`View ${name}`} onClick={() => onOpen(productId)}>
           {imageFailed || !image ? (
             <span className="product-image-fallback" role="img" aria-label={`${name} image unavailable`}>
               <ImageOff size={25} aria-hidden="true" />
@@ -57,7 +61,7 @@ export function ProductCard({
           type="button"
           aria-label={favorite ? `Remove ${name} from favorites` : `Add ${name} to favorites`}
           aria-pressed={favorite}
-          onClick={() => onFavorite(product.id)}
+          onClick={() => onFavorite(productId)}
         >
           <Heart size={17} fill={favorite ? 'currentColor' : 'none'} aria-hidden="true" />
         </button>
@@ -69,7 +73,7 @@ export function ProductCard({
       </div>
       <div className="product-info">
         <div className="product-name-line">
-          <button className="product-title" type="button" onClick={() => onOpen(product.id)}>{name}</button>
+          <button className="product-title" type="button" onClick={() => onOpen(productId)}>{name}</button>
           <strong>{formatMoney(price)}</strong>
         </div>
         {!compact && <p className="product-description">{getProductDescription(product)}</p>}

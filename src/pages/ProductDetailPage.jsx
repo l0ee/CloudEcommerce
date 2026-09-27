@@ -3,6 +3,7 @@ import {
   ArrowLeft, ArrowRight, ChevronRight, Heart, Minus, PackageCheck, Plus, RotateCcw, ShieldCheck, Truck,
 } from 'lucide-react';
 import { products as catalogProducts } from '../data/mockData.js';
+import { formatStrapiImageUrl } from '../utils/strapi.js';
 import './pages.css';
 
 const money = (amount) => new Intl.NumberFormat('en-US', {
@@ -60,7 +61,8 @@ export default function ProductDetailPage({
   }, [product?.id]);
 
   const gallery = useMemo(() => {
-    const productImages = product?.images || [];
+    const mainImgSrc = formatStrapiImageUrl(product?.imageUrl || product?.image || product?.images?.[0]?.src);
+    const productImages = [{ id: `${product?.id}-main`, src: mainImgSrc, alt: product?.title || product?.name }];
     const images = [...productImages, ...extraGallery.map((image, index) => ({
       id: `${product?.id}-gallery-${index}`,
       ...image,

@@ -44,6 +44,8 @@ export function Header({
   products = catalogProducts,
   categories = catalogCategories,
   activeCategory = '',
+  accountName = '',
+  liveCategories = false,
 }) {
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -59,17 +61,13 @@ export function Header({
     .filter((product) => getProductName(product).toLowerCase().includes(query.trim().toLowerCase()))
     .slice(0, 4);
   const suggestionsVisible = searchOpen && Boolean(query.trim());
-  const categoryItems = [
+  const categoryItems = liveCategories ? categories.map((item) => ({ label: getCategoryLabel(item), target: item.slug || item.name })) : [
     ...departmentItems,
-    ...categories
-      .map((category) => getCategoryLabel(category))
-      .filter((label) => label && !departmentItems.some((item) => item.target === label))
-      .map((label) => ({ label, target: label })),
+    ...categories.map((item) => getCategoryLabel(item)).filter((label) => label && !departmentItems.some((entry) => entry.target === label)).map((label) => ({ label, target: label })),
   ];
   const mobileItems = [
     ...categoryItems,
-    { label: 'Deals', target: 'Headphones' },
-    { label: 'Delivery', target: 'services' },
+    ...(liveCategories ? [] : [{ label: 'Deals', target: 'Headphones' }, { label: 'Delivery', target: 'services' }]),
   ];
 
   useEffect(() => {
@@ -104,7 +102,7 @@ export function Header({
   function submitSearch() {
     setSearchOpen(false);
     setActiveSuggestion(-1);
-    onNavigate('listing', query.trim() ? 'Search results' : 'Headphones');
+    onNavigate('listing', query.trim() ? 'Search results' : '', query.trim());
   }
 
   function handleSearchKeyDown(event) {
@@ -131,7 +129,7 @@ export function Header({
       <div className="topline">
         <div className="topline-inner">
           <a className="phone-line" href="tel:+001234567890"><Phone size={12} aria-hidden="true" /> +001234567890</a>
-          <button className="top-promo" type="button" onClick={() => navigateToCategory('Headphones')}>
+          <button className="top-promo" type="button" onClick={() => navigateToCategory(liveCategories ? '' : 'Headphones')}>
             Get 50% Off on Selected Items <span>|</span> <u>Shop Now</u>
           </button>
           <div className="top-selects">
@@ -182,9 +180,11 @@ export function Header({
                 </div>
               )}
             </div>
-            <button className="nav-link" type="button" onClick={() => navigateToCategory('Headphones')}>Deals</button>
-            <button className="nav-link" type="button" onClick={() => navigateToCategory('New arrivals')}>What’s New</button>
-            <button className="nav-link" type="button" onClick={() => navigateToCategory('services')}>Delivery</button>
+            {liveCategories ? <button className="nav-link" type="button" onClick={() => onNavigate('listing', '')}>All products</button> : <>
+              <button className="nav-link" type="button" onClick={() => navigateToCategory('Headphones')}>Deals</button>
+              <button className="nav-link" type="button" onClick={() => navigateToCategory('New arrivals')}>What’s New</button>
+              <button className="nav-link" type="button" onClick={() => navigateToCategory('services')}>Delivery</button>
+            </>}
           </div>
           <div className="search-wrap">
             <form className="search-box" role="search" onSubmit={(event) => { event.preventDefault(); submitSearch(); }}>
@@ -238,7 +238,7 @@ export function Header({
             )}
           </div>
           <div className="nav-actions">
-            <button className="account-action" type="button" onClick={onAccount}><UserRound size={19} aria-hidden="true" /><span>Account</span></button>
+            <button className="account-action" type="button" onClick={onAccount}><UserRound size={19} aria-hidden="true" /><span>{accountName || 'Account'}</span></button>
             <button className="cart-action" type="button" onClick={onCart}>
               <span className="cart-icon-wrap"><ShoppingCart size={20} aria-hidden="true" />{cartCount > 0 && <i>{cartCount}</i>}</span>
               <span>Cart</span>
